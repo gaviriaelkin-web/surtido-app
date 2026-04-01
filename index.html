@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#2d6a4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Surtido">
+<meta name="description" content="App de pedidos domésticos con voz e IA">
+<link rel="manifest" id="manifestLink">
+<title>Surtido 🛒</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-dark: #1b4332;
+    --green-mid: #2d6a4f;
+    --green-light: #40916c;
+    --green-soft: #d8f3dc;
+    --green-pale: #f0faf3;
+    --amber: #e9c46a;
+    --amber-dark: #c8960c;
+    --red: #e63946;
+    --red-soft: #ffeef0;
+    --text: #1a1a2e;
+    --text-mid: #4a4a6a;
+    --text-soft: #8888aa;
+    --bg: #f7fdf9;
+    --white: #ffffff;
+    --border: #d0e8d8;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 16px rgba(45,106,79,0.10);
+    --shadow-lg: 0 8px 32px rgba(45,106,79,0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: 'Nunito', sans-serif; color: var(--text); overscroll-behavior: none; }
+
+  /* HEADER */
+  .app-header {
+    background: var(--green-mid);
+    color: white;
+    padding: 20px 20px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .app-header::after {
+    content: '';
+    display: block;
+    height: 24px;
+    background: var(--bg);
+    border-radius: 24px 24px 0 0;
+    margin-top: 12px;
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .header-top h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-top .subtitle { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+  .install-hint { font-size: 11px; background: rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 10px; display: none; }
+
+  /* TABS */
+  .tabs { display: flex; padding: 0 16px; gap: 6px; margin-bottom: 16px; }
+  .tab {
+    flex: 1; padding: 10px 6px; border-radius: var(--radius-sm);
+    border: none; background: none; font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 700; color: var(--text-soft); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    transition: all 0.2s;
+  }
+  .tab .tab-icon { font-size: 20px; }
+  .tab.active { background: var(--green-soft); color: var(--green-dark); }
+  .tab .badge {
+    background: var(--red); color: white; font-size: 10px; font-weight: 800;
+    border-radius: 10px; padding: 1px 6px; min-width: 18px; text-align: center;
+    display: none;
+  }
+  .tab .badge.show { display: inline-block; }
+
+  /* SECTIONS */
+  .section { display: none; padding: 0 16px 120px; }
+  .section.active { display: block; }
+
+  /* RECORD */
+  .record-area {
+    background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--border);
+    padding: 24px 20px; text-align: center; margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .mic-btn {
+    width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--green-soft); display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px; font-size: 36px; transition: all 0.2s; position: relative;
+  }
+  .mic-btn:active { transform: scale(0.94); }
+  .mic-btn.recording { background: var(--red-soft); animation: mic-pulse 1.2s infinite; }
+  @keyframes mic-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(230,57,70,0.3); }
+    50% { box-shadow: 0 0 0 16px rgba(230,57,70,0); }
+  }
+  .record-label { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .record-sub { font-size: 12px; color: var(--text-soft); }
+
+  .transcript-box {
+    background: var(--green-pale); border: 1px dashed var(--border);
+    border-radius: var(--radius-sm); padding: 14px; min-height: 72px;
+    font-size: 14px; color: var(--text-mid); line-height: 1.6; margin-bottom: 12px;
+  }
+  .transcript-box.has-text { color: var(--text); background: var(--white); border-style: solid; border-color: var(--border); }
+
+  .action-btn {
+    width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none;
+    font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer;
+    background: var(--green-mid); color: white; transition: all 0.2s;
+  }
+  .action-btn:hover { background: var(--green-dark); }
+  .action-btn:disabled { background: var(--border); color: var(--text-soft); cursor: not-allowed; }
+  .action-btn.secondary { background: var(--white); color: var(--green-mid); border: 1.5px solid var(--green-mid); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip {
+    background: var(--green-soft); color: var(--green-dark);
+    font-size: 13px; font-weight: 700; padding: 6px 12px;
+    border-radius: 20px; display: flex; align-items: center; gap: 6px;
+  }
+  .chip button { background: none; border: none; cursor: pointer; color: var(--green-light); font-size: 16px; padding: 0; line-height: 1; }
+
+  /* STATUS */
+  .status { border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; font-weight: 600; margin-top: 10px; text-align: center; }
+  .status.ok { background: var(--green-soft); color: var(--green-dark); }
+  .status.err { background: var(--red-soft); color: var(--red); }
+  .status.info { background: #e8f4fd; color: #1565c0; }
+
+  /* MANUAL */
+  .section-title { font-size: 13px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .input-row input {
+    flex: 1; padding: 13px 14px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--white);
+    font-family: 'Nunito', sans-serif; font-size: 15px; color: var(--text);
+    outline: none;
+  }
+  .input-row input:focus { border-color: var(--green-light); }
+  .add-btn-sq {
+    width: 48px; height: 48px; border-radius: var(--radius-sm); border: none;
+    background: var(--green-mid); color: white; font-size: 24px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .suggestions-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .sugg-chip {
+    background: var(--white); border: 1.5px solid var(--border); color: var(--text-mid);
+    font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 20px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .sugg-chip:active { background: var(--green-soft); border-color: var(--green-light); color: var(--green-dark); }
+
+  /* PEDIDO LIST */
+  .pedido-item {
+    background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 13px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+    box-shadow: var(--shadow);
+  }
+  .item-emoji { font-size: 18px; flex-shrink: 0; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 15px; font-weight: 700; color: var(--text); text-transform: capitalize; }
+  .item-meta { font-size: 11px; color: var(--text-soft); margin-top: 1px; }
+  .qty-ctrl { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .qty-btn {
+    width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text-mid); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+  .qty-num { font-size: 15px; font-weight: 800; min-width: 22px; text-align: center; color: var(--green-dark); }
+  .del-btn { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--border); padding: 4px; flex-shrink: 0; }
+  .del-btn:active { color: var(--red); }
+
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-soft); }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; font-weight: 600; }
+  .empty-state small { font-size: 13px; }
+
+  /* BOTTOM BAR */
+  .bottom-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white); border-top: 1.5px solid var(--border);
+    padding: 12px 16px 24px; display: none; gap: 10px;
+  }
+  .bottom-bar.show { display: flex; }
+  .share-btn {
+    flex: 1; padding: 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--green-mid);
+    background: var(--white); color: var(--green-mid); font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .whatsapp-btn {
+    flex: 1; padding: 14px; border-radius: var(--radius-sm); border: none;
+    background: #25d366; color: white; font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+
+  /* HISTORIAL */
+  .hist-item {
+    background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 14px; margin-bottom: 8px;
+  }
+  .hist-date { font-size: 12px; font-weight: 700; color: var(--text-soft); margin-bottom: 6px; }
+  .hist-items { font-size: 14px; color: var(--text-mid); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+
+<div class="app-header">
+  <div class="header-top">
+    <div>
+      <h1>🛒 Surtido</h1>
+      <div class="subtitle">Tu lista de mercado inteligente</div>
+    </div>
+    <div class="install-hint" id="installHint">📲 Instalar app</div>
+    <button onclick="document.getElementById('setupScreen').style.display='block'" style="background:rgba(255,255,255,0.15);border:none;border-radius:20px;padding:5px 10px;font-size:18px;cursor:pointer;">⚙️</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('grabar')">
+    <span class="tab-icon">🎙️</span>
+    <span>Grabar</span>
+  </button>
+  <button class="tab" onclick="switchTab('manual')">
+    <span class="tab-icon">✏️</span>
+    <span>Manual</span>
+  </button>
+  <button class="tab" id="pedidoTab" onclick="switchTab('pedido')">
+    <span class="tab-icon">📋</span>
+    <span>Pedido</span>
+    <span class="badge" id="badge">0</span>
+  </button>
+  <button class="tab" onclick="switchTab('historial')">
+    <span class="tab-icon">🕐</span>
+    <span>Historial</span>
+  </button>
+</div>
+
+<!-- GRABAR -->
+<div id="tab-grabar" class="section active">
+  <div class="record-area">
+    <button class="mic-btn" id="micBtn" onclick="toggleRecord()">🎤</button>
+    <div class="record-label" id="recordLabel">Toca para grabar</div>
+    <div class="record-sub" id="recordSub">Di qué artículos están agotados</div>
+  </div>
+
+  <div class="transcript-box" id="transcriptBox">
+    Aquí aparecerá lo que dijiste...
+  </div>
+
+  <button class="action-btn" id="analyzeBtn" onclick="analyzeTranscript()" disabled>
+    ✦ Extraer artículos
+  </button>
+
+  <div class="chips" id="chipsContainer"></div>
+  <div id="statusGrabar"></div>
+</div>
+
+<!-- MANUAL -->
+<div id="tab-manual" class="section">
+  <div class="section-title">Agregar artículo</div>
+  <div class="input-row">
+    <input type="text" id="manualInput" placeholder="ej: leche, aceite, arroz..." onkeydown="if(event.key==='Enter')addManual()">
+    <button class="add-btn-sq" onclick="addManual()">+</button>
+  </div>
+  <div class="section-title">Sugerencias rápidas</div>
+  <div class="suggestions-grid" id="suggestionsGrid"></div>
+</div>
+
+<!-- PEDIDO -->
+<div id="tab-pedido" class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <span style="font-size:13px;color:var(--text-soft);font-weight:700;" id="listCount">0 artículos</span>
+    <button onclick="clearAll()" style="background:none;border:none;color:var(--red);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Limpiar todo</button>
+  </div>
+  <div id="pedidoList"></div>
+</div>
+
+<!-- HISTORIAL -->
+<div id="tab-historial" class="section">
+  <div class="section-title">Pedidos completados</div>
+  <div id="historialList"></div>
+</div>
+
+<!-- BOTTOM BAR (pedido) -->
+<div class="bottom-bar" id="bottomBar">
+  <button class="share-btn" onclick="copyList()">📋 Copiar lista</button>
+  <button class="whatsapp-btn" onclick="shareWhatsApp()">WhatsApp 📤</button>
+</div>
+
+<script>
+
+function _ak() { return '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'; }
+
+const SUGGESTIONS = ['Leche','Aceite','Arroz','Azúcar','Sal','Café','Huevos','Pan','Jabón','Papel higiénico','Shampoo','Detergente','Tomate','Cebolla','Ajo','Mantequilla','Harina','Pasta','Atún','Frijoles','Lenteja','Panela','Vinagre','Mayonesa','Salsa de tomate','Pañales','Lavaloza','Desinfectante'];
+
+let pedido = JSON.parse(localStorage.getItem('surtido_v2') || '[]');
+let historial = JSON.parse(localStorage.getItem('surtido_hist') || '[]');
+let recording = false;
+
+let transcript = '';
+let pendingItems = [];
+let deferredPrompt = null;
+
+// PWA install
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const hint = document.getElementById('installHint');
+  hint.style.display = 'block';
+  hint.onclick = async () => {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') hint.style.display = 'none';
+  };
+});
+
+// Manifest inline
+const manifest = {
+  name: 'Surtido',
+  short_name: 'Surtido',
+  description: 'Lista de mercado con voz e IA',
+  start_url: '.',
+  display: 'standalone',
+  background_color: '#f7fdf9',
+  theme_color: '#2d6a4f',
+  icons: [{
+    src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#2d6a4f"/><text y=".9em" font-size="80" x="10">🛒</text></svg>'),
+    sizes: '192x192',
+    type: 'image/svg+xml'
+  }]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+document.getElementById('manifestLink').href = URL.createObjectURL(blob);
+
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    alert('La clave debe comenzar con sk-ant-');
+    return;
+  }
+  localStorage.setItem('surtido_apikey', key);
+  document.getElementById('setupScreen').style.display = 'none';
+}
+
+function checkApiKey() {
+  const key = localStorage.getItem('surtido_apikey');
+  if (!key) {
+    document.getElementById('setupScreen').style.display = 'block';
+  }
+}
+
+function save() { localStorage.setItem('surtido_v2', JSON.stringify(pedido)); }
+function saveHist() { localStorage.setItem('surtido_hist', JSON.stringify(historial)); }
+
+function updateBadge() {
+  const n = pedido.length;
+  document.getElementById('badge').textContent = n;
+  document.getElementById('badge').classList.toggle('show', n > 0);
+  document.getElementById('listCount').textContent = n + ' artículo' + (n !== 1 ? 's' : '');
+  document.getElementById('bottomBar').classList.toggle('show', n > 0 && document.getElementById('tab-pedido').classList.contains('active'));
+}
+
+function switchTab(name) {
+  ['grabar','manual','pedido','historial'].forEach((t, i) => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t === name);
+  });
+  if (name === 'pedido') { renderPedido(); document.getElementById('bottomBar').classList.toggle('show', pedido.length > 0); }
+  else document.getElementById('bottomBar').classList.remove('show');
+  if (name === 'manual') renderSuggestions();
+  if (name === 'historial') renderHistorial();
+  updateBadge();
+}
+
+function renderSuggestions() {
+  const el = document.getElementById('suggestionsGrid');
+  el.innerHTML = '';
+  SUGGESTIONS.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'sugg-chip';
+    b.textContent = s;
+    b.onclick = () => addToPedido(s, 'manual');
+    el.appendChild(b);
+  });
+}
+
+let recognition = null;
+
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.lang = 'es-CO';
+  r.continuous = false;
+  r.interimResults = true;
+  r.maxAlternatives = 1;
+  return r;
+}
+
+function toggleRecord() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showStatus('statusGrabar', 'Tu celular no soporta reconocimiento de voz. Usa la pestaña Manual.', 'err');
+    return;
+  }
+  if (recording) {
+    recognition && recognition.stop();
+    return;
+  }
+  recognition = initRecognition();
+  recording = true;
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('micBtn').textContent = '⏹️';
+  document.getElementById('recordLabel').textContent = 'Escuchando... toca para parar';
+  document.getElementById('recordSub').textContent = 'Di qué artículos están agotados';
+  showStatus('statusGrabar', 'Escuchando...', 'info');
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    let final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    const box = document.getElementById('transcriptBox');
+    box.textContent = (transcript + ' ' + final + interim).trim();
+    box.classList.add('has-text');
+    if (final) transcript = (transcript + ' ' + final).trim();
+  };
+
+  recognition.onend = () => {
+    recording = false;
+    document.getElementById('micBtn').classList.remove('recording');
+    document.getElementById('micBtn').textContent = '🎤';
+    document.getElementById('recordLabel').textContent = 'Toca para grabar otra nota';
+    document.getElementById('recordSub').textContent = 'Di qué artículos están agotados';
+    if (transcript) {
+      document.getElementById('analyzeBtn').disabled = false;
+      showStatus('statusGrabar', 'Listo ✓ Ahora extrae los artículos', 'ok');
+    } else {
+      showStatus('statusGrabar', 'No se captó nada. Intenta de nuevo.', 'err');
+    }
+  };
+
+  recognition.onerror = (e) => {
+    recording = false;
+    document.getElementById('micBtn').classList.remove('recording');
+    document.getElementById('micBtn').textContent = '🎤';
+    document.getElementById('recordLabel').textContent = 'Toca para grabar';
+    document.getElementById('recordSub').textContent = 'Di qué artículos están agotados';
+    const msg = e.error === 'not-allowed' ? 'Permiso de micrófono denegado.' : 'Error al grabar. Intenta de nuevo.';
+    showStatus('statusGrabar', msg, 'err');
+  };
+
+  recognition.start();
+}
+
+function analyzeTranscript() {
+  if (!transcript) return;
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true; btn.textContent = '⏳ Analizando...';
+  const apiKey = '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';
+  const prompt = `Eres un asistente de compras doméstico colombiano. Del siguiente texto hablado, extrae TODOS los productos o artículos del hogar mencionados, uno por uno. Incluye alimentos, bebidas, productos de aseo y cualquier artículo de mercado. Responde ÚNICAMENTE con JSON válido sin explicaciones: {"items":["articulo1","articulo2","articulo3"]}. Cada nombre en singular, minúsculas, sin artículos (sin el/la/los/las/un/una). Si el texto menciona que algo se acabó, falta, o hay que comprar, ese es un artículo. Texto: "${transcript}"`;
+  fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+    body: JSON.stringify({
+      model: 'meta-llama/llama-3.3-70b-instruct',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 300
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const raw = data.choices?.[0]?.message?.content || '{"items":[]}';
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e) { parsed = {items:[]}; }
+    pendingItems = parsed.items || [];
+    renderChips();
+    if (pendingItems.length) {
+      btn.textContent = '✓ Agregar ' + pendingItems.length + ' artículo(s) al pedido';
+      btn.disabled = false;
+      btn.onclick = confirmItems;
+      showStatus('statusGrabar', `Se encontraron ${pendingItems.length} artículo(s)`, 'ok');
+    } else {
+      btn.textContent = '✦ Extraer artículos';
+      btn.disabled = true;
+      btn.onclick = analyzeTranscript;
+      showStatus('statusGrabar', 'No se identificaron artículos. Agrégalos manualmente.', 'err');
+    }
+  })
+  .catch(e => {
+    btn.disabled = false; btn.textContent = '✦ Extraer artículos';
+    showStatus('statusGrabar', 'Error: ' + e.message, 'err');
+  });
+}
+
+function renderChips() {
+  const el = document.getElementById('chipsContainer');
+  el.innerHTML = '';
+  pendingItems.forEach((item, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `${item} <button onclick="removePending(${i})">×</button>`;
+    el.appendChild(chip);
+  });
+}
+
+function removePending(i) {
+  pendingItems.splice(i, 1);
+  renderChips();
+  if (!pendingItems.length) {
+    const btn = document.getElementById('analyzeBtn');
+    btn.textContent = '✦ Extraer artículos';
+    btn.disabled = true;
+    btn.onclick = analyzeTranscript;
+  }
+}
+
+function confirmItems() {
+  pendingItems.forEach(item => addToPedido(item, 'voz'));
+  pendingItems = [];
+  document.getElementById('chipsContainer').innerHTML = '';
+  transcript = '';
+  const box = document.getElementById('transcriptBox');
+  box.textContent = 'Aquí aparecerá lo que dijiste...';
+  box.classList.remove('has-text');
+  const btn = document.getElementById('analyzeBtn');
+  btn.textContent = '✦ Extraer artículos';
+  btn.disabled = true;
+  btn.onclick = analyzeTranscript;
+  showStatus('statusGrabar', '¡Artículos agregados al pedido! ✓', 'ok');
+  setTimeout(() => switchTab('pedido'), 1000);
+}
+
+function addToPedido(name, source) {
+  const norm = name.trim().toLowerCase().replace(/^(el |la |los |las |un |una )/,'');
+  if (!norm) return;
+  if (pedido.find(p => p.name.toLowerCase() === norm)) {
+    showStatus('statusGrabar', `"${norm}" ya está en el pedido`, 'info');
+    return;
+  }
+  const today = new Date().toLocaleDateString('es-CO', {day:'2-digit', month:'short', year:'numeric'});
+  pedido.push({ id: Date.now(), name: norm, qty: 1, date: today, source });
+  save(); updateBadge();
+  if (document.getElementById('tab-pedido').classList.contains('active')) renderPedido();
+}
+
+function addManual() {
+  const input = document.getElementById('manualInput');
+  const raw = input.value.trim();
+  if (!raw) return;
+  raw.split(',').forEach(s => addToPedido(s.trim(), 'manual'));
+  input.value = '';
+}
+
+function renderPedido() {
+  const el = document.getElementById('pedidoList');
+  if (!pedido.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧺</div><p>Lista vacía</p><small>Graba una nota o agrega artículos manualmente</small></div>`;
+    updateBadge(); return;
+  }
+  el.innerHTML = '';
+  pedido.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'pedido-item';
+    div.innerHTML = `
+      <span class="item-emoji">${item.source==='voz'?'🎙️':'✏️'}</span>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-meta">${item.date}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+      </div>
+      <button class="del-btn" onclick="removeItem(${item.id})">🗑️</button>
+    `;
+    el.appendChild(div);
+  });
+  updateBadge();
+}
+
+function changeQty(id, d) {
+  const item = pedido.find(p => p.id === id);
+  if (item) { item.qty = Math.max(1, item.qty + d); save(); renderPedido(); }
+}
+
+function removeItem(id) {
+  pedido = pedido.filter(p => p.id !== id);
+  save(); renderPedido();
+}
+
+function clearAll() {
+  if (!pedido.length) return;
+  if (confirm('¿Guardar en historial y limpiar la lista?')) {
+    const today = new Date().toLocaleDateString('es-CO', {day:'2-digit',month:'long',year:'numeric'});
+    historial.unshift({ date: today, items: [...pedido] });
+    if (historial.length > 20) historial = historial.slice(0, 20);
+    saveHist();
+    pedido = []; save(); renderPedido();
+    document.getElementById('bottomBar').classList.remove('show');
+  }
+}
+
+function renderHistorial() {
+  const el = document.getElementById('historialList');
+  if (!historial.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Sin historial aún</p><small>Aquí aparecerán tus pedidos completados</small></div>`;
+    return;
+  }
+  el.innerHTML = '';
+  historial.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'hist-item';
+    div.innerHTML = `<div class="hist-date">📅 ${h.date}</div><div class="hist-items">${h.items.map(i=>`• ${i.name} x${i.qty}`).join('<br>')}</div>`;
+    el.appendChild(div);
+  });
+}
+
+function copyList() {
+  if (!pedido.length) return;
+  const lines = ['🛒 LISTA DE MERCADO', new Date().toLocaleDateString('es-CO'), '', ...pedido.map(p => `• ${p.name} (x${p.qty})`)];
+  navigator.clipboard.writeText(lines.join('\n')).then(() => alert('✓ Lista copiada al portapapeles'));
+}
+
+function shareWhatsApp() {
+  if (!pedido.length) return;
+  const lines = ['🛒 *Lista de mercado*', '', ...pedido.map(p => `• ${p.name} (x${p.qty})`)];
+  const text = encodeURIComponent(lines.join('\n'));
+  window.open('https://wa.me/?text=' + text, '_blank');
+}
+
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!msg) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="status ${type}">${msg}</div>`;
+}
+
+
+
+// Eliminar cualquier service worker previo que pueda cachear versiones viejas
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => reg.unregister());
+  });
+}
+
+updateBadge();
+</script>
+</body>
+</html>
