@@ -495,6 +495,17 @@ function analyzeTranscript() {
   })
   .then(r => r.json())
   .then(data => {
+    if (data.error) {
+      btn.disabled = false; btn.textContent = '✦ Extraer artículos';
+      const msg = data.error.message || JSON.stringify(data.error);
+      if (msg.includes('key') || msg.includes('auth') || msg.includes('401') || msg.includes('credit')) {
+        showStatus('statusGrabar', '🔑 Clave inválida o sin créditos. Toca ⚙️ para actualizarla.', 'err');
+        localStorage.removeItem('surtido_apikey');
+      } else {
+        showStatus('statusGrabar', 'Error API: ' + msg, 'err');
+      }
+      return;
+    }
     const raw = data.choices?.[0]?.message?.content || '{"items":[]}';
     let parsed;
     try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
@@ -515,7 +526,7 @@ function analyzeTranscript() {
   })
   .catch(e => {
     btn.disabled = false; btn.textContent = '✦ Extraer artículos';
-    showStatus('statusGrabar', 'Error: ' + e.message, 'err');
+    showStatus('statusGrabar', 'Error de red: ' + e.message, 'err');
   });
 }
 
