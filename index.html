@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#2d6a4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Surtido">
+<meta name="description" content="App de pedidos domésticos con voz e IA">
+<link rel="manifest" id="manifestLink">
+<title>Surtido 🛒</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-dark:  #1b4332;
+    --green-mid:   #2d6a4f;
+    --green-light: #40916c;
+    --green-soft:  #d8f3dc;
+    --green-pale:  #f0faf3;
+    --amber:       #e9c46a;
+    --amber-dark:  #c8960c;
+    --red:         #e63946;
+    --red-soft:    #ffeef0;
+    --text:        #1a1a2e;
+    --text-mid:    #4a4a6a;
+    --text-soft:   #8888aa;
+    --bg:          #f7fdf9;
+    --white:       #ffffff;
+    --border:      #d0e8d8;
+    --radius:      16px;
+    --radius-sm:   10px;
+    --shadow:      0 2px 16px rgba(45,106,79,0.10);
+    --shadow-lg:   0 8px 32px rgba(45,106,79,0.16);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; background:var(--bg); font-family:'Nunito',sans-serif; color:var(--text); overscroll-behavior:none; }
+
+  /* ── HEADER ─────────────────────────────── */
+  .app-header { background:var(--green-mid); color:white; padding:20px 20px 0; position:relative; overflow:hidden; }
+  .app-header::after { content:''; display:block; height:24px; background:var(--bg); border-radius:24px 24px 0 0; margin-top:12px; }
+  .header-top { display:flex; align-items:center; justify-content:space-between; }
+  .header-top h1 { font-size:22px; font-weight:800; letter-spacing:-0.5px; }
+  .header-top .subtitle { font-size:12px; opacity:0.75; margin-top:2px; }
+  .install-hint { font-size:11px; background:rgba(255,255,255,0.15); border-radius:20px; padding:5px 10px; display:none; }
+
+  /* ── TABS ────────────────────────────────── */
+  .tabs { display:flex; padding:0 16px; gap:6px; margin-bottom:16px; }
+  .tab {
+    flex:1; padding:10px 6px; border-radius:var(--radius-sm);
+    border:none; background:none; font-family:'Nunito',sans-serif;
+    font-size:13px; font-weight:700; color:var(--text-soft); cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px; transition:all 0.2s;
+  }
+  .tab .tab-icon { font-size:20px; }
+  .tab.active { background:var(--green-soft); color:var(--green-dark); }
+  .tab .badge {
+    background:var(--red); color:white; font-size:10px; font-weight:800;
+    border-radius:10px; padding:1px 6px; min-width:18px; text-align:center; display:none;
+  }
+  .tab .badge.show { display:inline-block; }
+
+  /* ── SECTIONS ────────────────────────────── */
+  .section { display:none; padding:0 16px 150px; }
+  .section.active { display:block; }
+
+  /* ── SPEAKING BAR ────────────────────────── */
+  .speaking-bar {
+    display:none; align-items:center; gap:8px;
+    background:#e8f4fd; border-radius:var(--radius-sm);
+    padding:10px 14px; margin-bottom:10px;
+    font-size:14px; font-weight:700; color:#1565c0;
+    border-left:4px solid #1565c0;
+  }
+  .speaking-bar.show { display:flex; }
+  .speaking-dot { width:6px; height:6px; border-radius:50%; background:#1565c0; animation:dot-bounce 1s infinite; }
+  .speaking-dot:nth-child(2){animation-delay:.15s;} .speaking-dot:nth-child(3){animation-delay:.3s;}
+  @keyframes dot-bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+
+  /* ── MIC AREA ────────────────────────────── */
+  .record-area {
+    background:var(--white); border-radius:var(--radius);
+    border:1.5px solid var(--border);
+    padding:28px 20px 20px; text-align:center; margin-bottom:14px;
+    box-shadow:var(--shadow); transition:border-color 0.3s;
+  }
+  .record-area.listening { border-color:var(--red); }
+  .mic-btn {
+    width:100px; height:100px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--green-soft); display:flex; align-items:center; justify-content:center;
+    margin:0 auto 16px; font-size:44px; transition:all 0.2s;
+    box-shadow:0 4px 20px rgba(45,106,79,0.18);
+  }
+  .mic-btn:active { transform:scale(0.94); }
+  .mic-btn.recording { background:var(--red-soft); animation:mic-pulse 1.2s infinite; }
+  .mic-btn.processing { background:#fff9e6; animation:mic-glow 1.5s infinite; cursor:default; }
+  @keyframes mic-pulse  { 0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,0.3)} 50%{box-shadow:0 0 0 22px rgba(230,57,70,0)} }
+  @keyframes mic-glow   { 0%,100%{box-shadow:0 0 0 0 rgba(233,196,106,0.4)} 50%{box-shadow:0 0 0 22px rgba(233,196,106,0)} }
+  .record-label { font-size:18px; font-weight:800; color:var(--text); margin-bottom:6px; }
+  .record-sub   { font-size:14px; color:var(--text-soft); line-height:1.5; }
+
+  /* ── INTERIM TEXT (lo que va diciendo en tiempo real) ── */
+  .interim-box {
+    min-height:28px; margin-top:14px; padding:8px 12px;
+    font-size:14px; color:var(--text-soft); font-style:italic;
+    background:var(--green-pale); border-radius:8px;
+    transition:opacity 0.2s; opacity:0.7;
+  }
+  .interim-box:empty { display:none; }
+
+  /* ── LIVE ITEMS LIST ─────────────────────── */
+  .live-section {
+    background:var(--white); border-radius:var(--radius);
+    border:1.5px solid var(--border); padding:16px;
+    margin-bottom:14px; box-shadow:var(--shadow);
+    display:none;
+  }
+  .live-section.show { display:block; }
+  .live-title {
+    font-size:13px; font-weight:700; color:var(--text-soft);
+    text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;
+  }
+  .live-item {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 4px; border-bottom:1px solid var(--green-soft);
+    font-size:16px; font-weight:700; color:var(--text);
+    text-transform:capitalize;
+    animation:item-appear 0.35s ease both;
+  }
+  .live-item:last-child { border-bottom:none; }
+  @keyframes item-appear {
+    from { opacity:0; transform:translateX(-12px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+  .live-item .item-icon { font-size:18px; flex-shrink:0; }
+  .live-item .item-del {
+    margin-left:auto; background:none; border:none;
+    color:var(--text-soft); cursor:pointer; font-size:18px; padding:2px 6px;
+    border-radius:6px; transition:all 0.15s;
+  }
+  .live-item .item-del:active { color:var(--red); background:var(--red-soft); }
+  .live-empty {
+    text-align:center; padding:16px; color:var(--text-soft);
+    font-size:14px; font-style:italic;
+  }
+
+  /* ── DONE BUTTON (visible durante grabación) ── */
+  .done-btn {
+    width:100%; margin-top:14px; padding:15px;
+    border-radius:var(--radius-sm); border:none;
+    background:var(--green-dark); color:white;
+    font-family:'Nunito',sans-serif; font-size:16px; font-weight:800;
+    cursor:pointer; box-shadow:0 4px 14px rgba(27,67,50,0.25);
+    transition:all 0.2s;
+  }
+  .done-btn:active { transform:scale(0.97); }
+  .done-btn:disabled { background:var(--border); color:var(--text-soft); cursor:not-allowed; box-shadow:none; }
+
+  /* ── CONFIRM PANEL ───────────────────────── */
+  .confirm-panel {
+    background:var(--white); border-radius:var(--radius);
+    border:2px solid var(--green-light); padding:20px;
+    margin-bottom:14px; display:none; box-shadow:var(--shadow-lg);
+    animation:slide-up 0.3s ease;
+  }
+  .confirm-panel.show { display:block; }
+  @keyframes slide-up { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .confirm-title { font-size:14px; font-weight:700; color:var(--green-dark); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+  .confirm-btns { display:flex; gap:10px; margin-top:14px; }
+  .btn-yes {
+    flex:2; padding:16px; border-radius:var(--radius-sm); border:none;
+    background:var(--green-mid); color:white;
+    font-family:'Nunito',sans-serif; font-size:17px; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 12px rgba(45,106,79,0.25); transition:all 0.2s;
+  }
+  .btn-yes:active { transform:scale(0.97); background:var(--green-dark); }
+  .btn-no {
+    flex:1; padding:16px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--border); background:var(--white); color:var(--text-mid);
+    font-family:'Nunito',sans-serif; font-size:16px; font-weight:700; cursor:pointer;
+  }
+  .btn-no:active { background:var(--red-soft); border-color:var(--red); color:var(--red); }
+  .voice-hint { text-align:center; font-size:13px; color:var(--green-light); font-weight:700; margin-top:10px; display:none; animation:fade-blink 1.8s infinite; }
+  .voice-hint.show { display:block; }
+  @keyframes fade-blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  /* ── STATUS ──────────────────────────────── */
+  .status { border-radius:var(--radius-sm); padding:12px 14px; font-size:15px; font-weight:600; margin-top:10px; text-align:center; }
+  .status.ok   { background:var(--green-soft); color:var(--green-dark); }
+  .status.err  { background:var(--red-soft);   color:var(--red); }
+  .status.info { background:#e8f4fd;            color:#1565c0; }
+  .status.warn { background:#fff8e1;            color:var(--amber-dark); }
+
+  /* ── MANUAL ──────────────────────────────── */
+  .section-title { font-size:13px; font-weight:700; color:var(--text-soft); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+  .input-row { display:flex; gap:8px; margin-bottom:14px; }
+  .input-row input {
+    flex:1; padding:14px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--border); background:var(--white);
+    font-family:'Nunito',sans-serif; font-size:16px; color:var(--text); outline:none;
+  }
+  .input-row input:focus { border-color:var(--green-light); }
+  .add-btn-sq { width:52px; height:52px; border-radius:var(--radius-sm); border:none; background:var(--green-mid); color:white; font-size:26px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .suggestions-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .sugg-chip { background:var(--white); border:1.5px solid var(--border); color:var(--text-mid); font-size:14px; font-weight:600; padding:8px 16px; border-radius:20px; cursor:pointer; transition:all 0.15s; }
+  .sugg-chip:active { background:var(--green-soft); border-color:var(--green-light); color:var(--green-dark); }
+
+  /* ── PEDIDO ──────────────────────────────── */
+  .pedido-item {
+    background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius-sm);
+    padding:14px; margin-bottom:10px; display:flex; align-items:center; gap:10px;
+    box-shadow:var(--shadow);
+  }
+  .item-emoji { font-size:20px; flex-shrink:0; }
+  .item-info  { flex:1; min-width:0; }
+  .item-name  { font-size:16px; font-weight:700; color:var(--text); text-transform:capitalize; }
+  .item-meta  { font-size:12px; color:var(--text-soft); margin-top:2px; }
+  .qty-ctrl   { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .qty-btn { width:34px; height:34px; border-radius:8px; border:1.5px solid var(--border); background:var(--bg); color:var(--text-mid); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; }
+  .qty-num { font-size:16px; font-weight:800; min-width:24px; text-align:center; color:var(--green-dark); }
+  .del-btn { background:none; border:none; cursor:pointer; font-size:22px; color:var(--border); padding:4px; flex-shrink:0; }
+  .del-btn:active { color:var(--red); }
+  .empty-state { text-align:center; padding:48px 20px; color:var(--text-soft); }
+  .empty-state .empty-icon { font-size:56px; margin-bottom:12px; }
+  .empty-state p { font-size:17px; font-weight:700; }
+  .empty-state small { font-size:14px; }
+
+  /* ── BOTTOM BAR ──────────────────────────── */
+  .bottom-bar { position:fixed; bottom:0; left:0; right:0; background:var(--white); border-top:1.5px solid var(--border); padding:12px 16px 28px; display:none; gap:10px; }
+  .bottom-bar.show { display:flex; }
+  .share-btn     { flex:1; padding:15px; border-radius:var(--radius-sm); border:1.5px solid var(--green-mid); background:var(--white); color:var(--green-mid); font-family:'Nunito',sans-serif; font-size:15px; font-weight:700; cursor:pointer; }
+  .whatsapp-btn  { flex:1; padding:15px; border-radius:var(--radius-sm); border:none; background:#25d366; color:white; font-family:'Nunito',sans-serif; font-size:15px; font-weight:700; cursor:pointer; }
+
+  /* ── HISTORIAL ───────────────────────────── */
+  .hist-item { background:var(--white); border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:14px; margin-bottom:10px; }
+  .hist-date  { font-size:13px; font-weight:700; color:var(--text-soft); margin-bottom:6px; }
+  .hist-items { font-size:15px; color:var(--text-mid); line-height:1.8; }
+
+  /* ── SETUP ───────────────────────────────── */
+  .setup-field { margin-bottom:14px; }
+  .setup-label { font-size:13px; font-weight:700; color:var(--text-soft); margin-bottom:6px; display:block; }
+  .setup-input {
+    width:100%; padding:13px 14px; border-radius:var(--radius-sm);
+    border:1.5px solid var(--border); font-family:'Nunito',sans-serif;
+    font-size:14px; outline:none; color:var(--text);
+  }
+  .setup-hint { font-size:12px; color:var(--text-soft); margin-top:4px; line-height:1.4; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="header-top">
+    <div>
+      <h1>🛒 Surtido</h1>
+      <div class="subtitle">Tu lista de mercado inteligente</div>
+    </div>
+    <div class="install-hint" id="installHint">📲 Instalar app</div>
+    <button onclick="openSetup()" style="background:rgba(255,255,255,0.15);border:none;border-radius:20px;padding:6px 12px;font-size:18px;cursor:pointer;">⚙️</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('grabar')"><span class="tab-icon">🎙️</span><span>Grabar</span></button>
+  <button class="tab" onclick="switchTab('manual')"><span class="tab-icon">✏️</span><span>Manual</span></button>
+  <button class="tab" id="pedidoTab" onclick="switchTab('pedido')"><span class="tab-icon">📋</span><span>Pedido</span><span class="badge" id="badge">0</span></button>
+  <button class="tab" onclick="switchTab('historial')"><span class="tab-icon">🕐</span><span>Historial</span></button>
+</div>
+
+<!-- ════════════ GRABAR ════════════ -->
+<div id="tab-grabar" class="section active">
+
+  <!-- Indicador de voz hablando -->
+  <div class="speaking-bar" id="speakingBar">
+    <div class="speaking-dot"></div><div class="speaking-dot"></div><div class="speaking-dot"></div>
+    <span id="speakingText">Un momento…</span>
+  </div>
+
+  <!-- Botón micrófono -->
+  <div class="record-area" id="recordArea">
+    <button class="mic-btn" id="micBtn" onclick="toggleRecord()">🎤</button>
+    <div class="record-label" id="recordLabel">Toca para empezar</div>
+    <div class="record-sub"  id="recordSub">Di los artículos que te hacen falta, uno por uno</div>
+    <!-- Texto interim en tiempo real -->
+    <div class="interim-box" id="interimBox"></div>
+  </div>
+
+  <!-- Lista en vivo (aparece mientras se graba) -->
+  <div class="live-section" id="liveSection">
+    <div class="live-title">📝 Lo que voy apuntando:</div>
+    <div id="liveItemsList">
+      <div class="live-empty" id="liveEmpty">Aún no he escuchado ningún artículo…</div>
+    </div>
+    <button class="done-btn" id="doneBtn" onclick="stopAndConfirm()" disabled>
+      ✓ Ya terminé de dictar
+    </button>
+  </div>
+
+  <!-- Panel de confirmación (aparece al terminar) -->
+  <div class="confirm-panel" id="confirmPanel">
+    <div class="confirm-title">✅ ¿Agrego estos artículos al pedido?</div>
+    <div id="confirmItemsList"></div>
+    <div class="confirm-btns">
+      <button class="btn-yes" onclick="confirmItems()">✓ Sí, agregar todo</button>
+      <button class="btn-no"  onclick="cancelConfirm()">✕ Cancelar</button>
+    </div>
+    <div class="voice-hint" id="voiceHint">🎤 O di "sí" para confirmar</div>
+  </div>
+
+  <div id="statusGrabar"></div>
+</div>
+
+<!-- ════════════ MANUAL ════════════ -->
+<div id="tab-manual" class="section">
+  <div class="section-title">Agregar artículo</div>
+  <div class="input-row">
+    <input type="text" id="manualInput" placeholder="ej: leche, aceite, arroz…" onkeydown="if(event.key==='Enter')addManual()">
+    <button class="add-btn-sq" onclick="addManual()">+</button>
+  </div>
+  <div class="section-title">Sugerencias rápidas</div>
+  <div class="suggestions-grid" id="suggestionsGrid"></div>
+</div>
+
+<!-- ════════════ PEDIDO ════════════ -->
+<div id="tab-pedido" class="section">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <span style="font-size:14px;color:var(--text-soft);font-weight:700;" id="listCount">0 artículos</span>
+    <button onclick="clearAll()" style="background:none;border:none;color:var(--red);font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Limpiar todo</button>
+  </div>
+  <div id="pedidoList"></div>
+</div>
+
+<!-- ════════════ HISTORIAL ════════════ -->
+<div id="tab-historial" class="section">
+  <div class="section-title">Pedidos completados</div>
+  <div id="historialList"></div>
+</div>
+
+<!-- ════════════ SETUP ════════════ -->
+<div id="setupScreen" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto;">
+  <div style="background:var(--white);border-radius:var(--radius);padding:28px 24px;width:100%;max-width:420px;box-shadow:var(--shadow-lg);margin:auto;">
+    <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">⚙️ Configuración</h2>
+    <p style="font-size:13px;color:var(--text-soft);margin-bottom:22px;">Las claves se guardan solo en este dispositivo y nunca se suben a ningún servidor.</p>
+
+    <!-- OpenRouter -->
+    <div class="setup-field">
+      <label class="setup-label">🔑 Clave OpenRouter <span style="color:var(--red);">*</span></label>
+      <input id="apiKeyInput" class="setup-input" type="password" placeholder="sk-or-v1-…">
+      <div class="setup-hint">Requerida para el análisis de artículos. Obtén la tuya en <strong>openrouter.ai</strong></div>
+    </div>
+
+    <!-- ElevenLabs (voz humana) -->
+    <div class="setup-field">
+      <label class="setup-label">🎙️ Clave ElevenLabs <span style="color:var(--text-soft);font-weight:600;">(opcional — voz más humana)</span></label>
+      <input id="elKeyInput" class="setup-input" type="password" placeholder="sk_…">
+      <div class="setup-hint">Activa una voz natural y cálida, como la de Perplexity. Plan gratis en <strong>elevenlabs.io</strong> (10.000 caracteres/mes, suficiente para esta app).</div>
+    </div>
+
+    <div class="setup-field">
+      <label class="setup-label">🗣️ ID de voz ElevenLabs</label>
+      <input id="elVoiceInput" class="setup-input" type="text" placeholder="pFZP5JQG7iQjIQuC4Bku">
+      <div class="setup-hint">
+        Voces recomendadas en español:<br>
+        • <strong>Lily</strong> (cálida, femenina): <code>pFZP5JQG7iQjIQuC4Bku</code><br>
+        • <strong>Charlotte</strong> (clara, profesional): <code>XB0fDUnXU5powFXDhCwa</code><br>
+        Explora más en <strong>elevenlabs.io/voices</strong>
+      </div>
+    </div>
+
+    <button onclick="saveSetup()" style="width:100%;padding:14px;border-radius:var(--radius-sm);border:none;background:var(--green-mid);color:white;font-family:'Nunito',sans-serif;font-size:16px;font-weight:800;cursor:pointer;margin-bottom:10px;">Guardar configuración</button>
+    <button onclick="closeSetup()" style="width:100%;padding:12px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);color:var(--text-mid);font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">Cerrar</button>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar" id="bottomBar">
+  <button class="share-btn"    onclick="copyList()">📋 Copiar lista</button>
+  <button class="whatsapp-btn" onclick="shareWhatsApp()">WhatsApp 📤</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     SCRIPT PRINCIPAL
+════════════════════════════════════════════════════════ -->
+<script>
+/*
+  SURTIDO v4 — Dictado continuo + IA en tiempo real + Voz humana
+  ─────────────────────────────────────────────────────────────
+  FLUJO NUEVO:
+  1. Toca el micrófono → grabación continua comienza
+  2. Di los artículos uno por uno (o de corrido)
+  3. La IA va apuntando artículos en tiempo real en la lista
+  4. Cuando termines: di "listo" / "ya terminé" / toca el botón
+  5. La IA lee lo que anotó → di "sí" o toca confirmar
+  6. Los artículos se agregan al carrito automáticamente
+
+  VOZ:
+  - Si hay clave ElevenLabs → voz humana natural (multilingüe)
+  - Sin clave → Web Speech API con la mejor voz española disponible
+
+  CORRECCIÓN FONÉTICA:
+  - "chispas de águila" → "six-pack de Águila"
+  - Marcas colombianas, errores del reconocedor, etc.
+*/
+
+// ═══════════════════════════════════════
+//  CONSTANTES Y ESTADO GLOBAL
+// ═══════════════════════════════════════
+const SUGGESTIONS = [
+  'Leche','Aceite','Arroz','Azúcar','Sal','Café','Huevos','Pan',
+  'Jabón','Papel higiénico','Shampoo','Detergente','Tomate','Cebolla',
+  'Ajo','Mantequilla','Harina','Pasta','Atún','Frijoles','Lenteja',
+  'Panela','Vinagre','Mayonesa','Salsa de tomate','Pañales','Lavaloza',
+  'Desinfectante','Águila','Póker','Club Colombia','Postobón','Coca-Cola'
+];
+
+// Palabras que el usuario puede decir para indicar que terminó
+const STOP_WORDS = [
+  'listo','ya terminé','ya termine','eso es todo','ya acabé','ya acabe',
+  'es todo','ya está','ya esta','nada más','nada mas','fin','finalizar',
+  'terminar','hasta ahí','hasta ahi','ya es todo'
+];
+
+const AI_DEBOUNCE_MS   = 2000;  // espera 2s después del último speech antes de llamar IA
+const SILENCE_PROMPT_MS = 5000; // después de 5s de silencio, pregunta si terminó
+
+let pedido    = JSON.parse(localStorage.getItem('surtido_v2') || '[]');
+let historial = JSON.parse(localStorage.getItem('surtido_hist') || '[]');
+
+// Estado de grabación
+let isListening       = false;   // ¿estamos en modo escucha continua?
+let suppressRestart   = false;   // pausar el loop mientras habla la IA
+let recognition       = null;
+let confirmRecognition= null;
+let fullTranscript    = '';      // todo lo que dijo el usuario (solo resultados final)
+let latestInterim     = '';      // último texto provisional (fallback si no hay final)
+let processedUpTo     = 0;       // índice hasta donde la IA ya procesó
+let liveItems         = [];      // artículos detectados en tiempo real
+let aiDebounceTimer   = null;
+let silenceTimer      = null;
+let aiCallInProgress  = false;
+
+// Estado de TTS
+let currentAudio      = null;    // ElevenLabs audio element
+let deferredPrompt    = null;
+
+// ═══════════════════════════════════════
+//  PWA + MANIFEST
+// ═══════════════════════════════════════
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  const hint = document.getElementById('installHint');
+  hint.style.display = 'block';
+  hint.onclick = async () => {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') hint.style.display = 'none';
+  };
+});
+const _manifest = { name:'Surtido', short_name:'Surtido', description:'Lista de mercado con voz e IA', start_url:'.', display:'standalone', background_color:'#f7fdf9', theme_color:'#2d6a4f', icons:[{ src:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#2d6a4f"/><text y=".9em" font-size="80" x="10">🛒</text></svg>'), sizes:'192x192', type:'image/svg+xml' }] };
+document.getElementById('manifestLink').href = URL.createObjectURL(new Blob([JSON.stringify(_manifest)],{type:'application/json'}));
+
+// ═══════════════════════════════════════
+//  SETUP / CONFIGURACIÓN
+// ═══════════════════════════════════════
+function openSetup() {
+  const s = document.getElementById('setupScreen');
+  document.getElementById('apiKeyInput').value  = localStorage.getItem('surtido_apikey') || '';
+  document.getElementById('elKeyInput').value   = localStorage.getItem('surtido_el_key') || '';
+  document.getElementById('elVoiceInput').value = localStorage.getItem('surtido_el_voice') || 'pFZP5JQG7iQjIQuC4Bku';
+  s.style.display = 'flex';
+}
+function closeSetup() { document.getElementById('setupScreen').style.display = 'none'; }
+function saveSetup() {
+  const apiKey  = document.getElementById('apiKeyInput').value.trim();
+  const elKey   = document.getElementById('elKeyInput').value.trim();
+  const elVoice = document.getElementById('elVoiceInput').value.trim();
+  if (apiKey && !apiKey.startsWith('sk-or-v1-')) { alert('La clave de OpenRouter debe comenzar con sk-or-v1-'); return; }
+  if (apiKey)  localStorage.setItem('surtido_apikey',   apiKey);
+  if (elKey)   localStorage.setItem('surtido_el_key',   elKey);
+  if (elVoice) localStorage.setItem('surtido_el_voice', elVoice);
+  closeSetup();
+  speak('¡Listo! La configuración quedó guardada. Ya puedes empezar a dictar tu lista.');
+}
+function checkApiKey() {
+  if (!localStorage.getItem('surtido_apikey')) openSetup();
+}
+
+// ═══════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════
+function save()     { localStorage.setItem('surtido_v2',   JSON.stringify(pedido)); }
+function saveHist() { localStorage.setItem('surtido_hist', JSON.stringify(historial)); }
+
+// ═══════════════════════════════════════
+//  TEXT-TO-SPEECH — con ElevenLabs o Web Speech
+// ═══════════════════════════════════════
+function speak(text, onEnd) {
+  const elKey = localStorage.getItem('surtido_el_key');
+  if (elKey) {
+    speakElevenLabs(text, onEnd);
+  } else {
+    speakWebSpeech(text, onEnd);
+  }
+}
+
+function stopSpeaking() {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  hideSpeakingBar();
+}
+
+// ── ElevenLabs (voz humana natural) ──
+async function speakElevenLabs(text, onEnd) {
+  const key     = localStorage.getItem('surtido_el_key');
+  const voiceId = localStorage.getItem('surtido_el_voice') || 'pFZP5JQG7iQjIQuC4Bku';
+
+  // Pausar reconocimiento mientras hablamos (evita que el mic capture la voz IA)
+  suppressRestart = true;
+  if (recognition) { try { recognition.stop(); } catch(e){} }
+
+  showSpeakingBar(text);
+
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+      method: 'POST',
+      headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.48,         // 0=más expresiva  1=más estable
+          similarity_boost: 0.82,  // qué tanto suena como la voz original
+          style: 0.30,             // énfasis emocional
+          use_speaker_boost: true  // mejora la claridad
+        }
+      })
+    });
+
+    if (!res.ok) throw new Error('ElevenLabs HTTP ' + res.status);
+
+    const audioBlob = await res.blob();
+    const audioUrl  = URL.createObjectURL(audioBlob);
+    currentAudio    = new Audio(audioUrl);
+
+    currentAudio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      currentAudio = null;
+      hideSpeakingBar();
+      suppressRestart = false;
+      if (isListening) startRecognition(); // retomar escucha
+      onEnd && onEnd();
+    };
+    currentAudio.onerror = () => {
+      currentAudio = null;
+      hideSpeakingBar();
+      suppressRestart = false;
+      if (isListening) startRecognition();
+      onEnd && onEnd();
+    };
+
+    await currentAudio.play();
+
+  } catch(err) {
+    console.warn('ElevenLabs falló, usando Web Speech:', err);
+    // Si ElevenLabs falla, usa Web Speech como respaldo
+    suppressRestart = false;
+    speakWebSpeech(text, onEnd);
+  }
+}
+
+// ── Web Speech API (respaldo gratuito) ──
+function speakWebSpeech(text, onEnd) {
+  if (!window.speechSynthesis) { onEnd && onEnd(); return; }
+
+  suppressRestart = true;
+  if (recognition) { try { recognition.stop(); } catch(e){} }
+
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang  = 'es-CO';
+  utter.rate  = 0.87;   // ligeramente más lento: más fácil de entender
+  utter.pitch = 1.08;   // tono levemente más alto: suena más cálido
+
+  // Selecciona la mejor voz española disponible
+  const voices = window.speechSynthesis.getVoices();
+  const voicePriority = [
+    v => v.name.includes('Google') && v.lang.startsWith('es'),
+    v => v.name.toLowerCase().includes('female') && v.lang.startsWith('es'),
+    v => v.lang === 'es-CO',
+    v => v.lang === 'es-US',
+    v => v.lang.startsWith('es'),
+  ];
+  for (const test of voicePriority) {
+    const found = voices.find(test);
+    if (found) { utter.voice = found; break; }
+  }
+
+  showSpeakingBar(text);
+  utter.onend = utter.onerror = () => {
+    hideSpeakingBar();
+    suppressRestart = false;
+    if (isListening) startRecognition();
+    onEnd && onEnd();
+  };
+  window.speechSynthesis.speak(utter);
+}
+
+function showSpeakingBar(text) {
+  document.getElementById('speakingBar').classList.add('show');
+  document.getElementById('speakingText').textContent = text.length > 70 ? text.slice(0,67)+'…' : text;
+}
+function hideSpeakingBar() {
+  document.getElementById('speakingBar').classList.remove('show');
+}
+
+// Precarga de voces (algunas plataformas las cargan asíncronamente)
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+// ═══════════════════════════════════════
+//  RECONOCIMIENTO DE VOZ — loop continuo
+// ═══════════════════════════════════════
+function toggleRecord() {
+  if (suppressRestart) { stopSpeaking(); return; } // toca mientras habla → interrumpe
+  if (isListening) {
+    stopAndConfirm(); // segundo toque → terminar dictado
+  } else {
+    startListening();
+  }
+}
+
+function startListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showStatus('statusGrabar', '🚫 Tu celular no soporta reconocimiento de voz. Usa la pestaña Manual.', 'err');
+    return;
+  }
+  if (!localStorage.getItem('surtido_apikey')) { openSetup(); return; }
+
+  // Reset completo
+  isListening       = true;
+  suppressRestart   = false;
+  fullTranscript    = '';
+  latestInterim     = '';
+  processedUpTo     = 0;
+  liveItems         = [];
+  aiCallInProgress  = false;
+  clearTimeout(aiDebounceTimer);
+  clearTimeout(silenceTimer);
+
+  // UI → modo escucha
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('micBtn').textContent = '⏹️';
+  document.getElementById('recordLabel').textContent = 'Estoy escuchando…';
+  document.getElementById('recordSub').textContent   = 'Di los artículos uno por uno. Toca para terminar.';
+  document.getElementById('recordArea').classList.add('listening');
+  document.getElementById('liveSection').classList.add('show');
+  document.getElementById('liveItemsList').innerHTML = '';
+  document.getElementById('liveEmpty').style.display = 'block';
+  document.getElementById('doneBtn').disabled = true;
+  document.getElementById('confirmPanel').classList.remove('show');
+  document.getElementById('interimBox').textContent = '';
+  showStatus('statusGrabar', '', '');
+
+  showStatus('statusGrabar', '🎙️ Escuchando… habla ahora', 'info');
+  startRecognition();
+}
+
+function startRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  recognition = new SR();
+  recognition.lang            = 'es-CO';
+  recognition.continuous      = true;   // UNA sola instancia, sin loop de reinicio
+  recognition.interimResults  = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = handleSpeechResult;
+
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed') {
+      isListening = false;
+      resetMicUI();
+      showStatus('statusGrabar', '🚫 Permiso de micrófono denegado. Ve a Ajustes → Apps → Chrome → Permisos → Micrófono.', 'err');
+      return;
+    }
+    // En otros errores (network, audio-capture, etc.) reintentar una vez
+    if (isListening && !suppressRestart && e.error !== 'aborted') {
+      setTimeout(() => {
+        if (isListening && !suppressRestart) startRecognition();
+      }, 800);
+    }
+  };
+
+  // continuous=true puede detenerse sola por silencio prolongado → reiniciar
+  recognition.onend = () => {
+    if (isListening && !suppressRestart) {
+      setTimeout(() => {
+        if (isListening && !suppressRestart) startRecognition();
+      }, 300);
+    }
+  };
+
+  try {
+    recognition.start();
+  } catch(e) {
+    if (isListening) setTimeout(startRecognition, 600);
+  }
+}
+
+function handleSpeechResult(e) {
+  // Reiniciar temporizador de silencio
+  clearTimeout(silenceTimer);
+  silenceTimer = setTimeout(onSilenceDetected, SILENCE_PROMPT_MS);
+
+  let final = '', interim = '';
+  for (let i = e.resultIndex; i < e.results.length; i++) {
+    if (e.results[i].isFinal) final += e.results[i][0].transcript;
+    else interim += e.results[i][0].transcript;
+  }
+
+  // Mostrar texto provisional mientras habla + guardar como fallback
+  if (interim) {
+    latestInterim = interim;
+    document.getElementById('interimBox').textContent = interim;
+  }
+
+  if (final) {
+    latestInterim = ''; // ya tenemos resultado final, limpiar interim
+    document.getElementById('interimBox').textContent = '';
+    fullTranscript += (fullTranscript ? ' ' : '') + final.trim();
+
+    // ¿Dijo una palabra de parada?
+    if (isStopCommand(final)) {
+      stopAndConfirm();
+      return;
+    }
+
+    // Programar llamada a la IA (debounce: espera 2s sin hablar)
+    clearTimeout(aiDebounceTimer);
+    aiDebounceTimer = setTimeout(processNewSpeech, AI_DEBOUNCE_MS);
+  }
+}
+
+// Detección de silencio prolongado
+function onSilenceDetected() {
+  if (!isListening || !liveItems.length) return;
+  const n = liveItems.length;
+  speak(`Ya apunté ${n} artículo${n > 1 ? 's' : ''}. ¿Sigues dictando o ya terminaste?`);
+}
+
+// ¿Dijo una palabra de parada?
+function isStopCommand(text) {
+  const lower = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return STOP_WORDS.some(w => lower.includes(w.normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
+}
+
+// ═══════════════════════════════════════
+//  PROCESAMIENTO IA — incremental
+// ═══════════════════════════════════════
+async function processNewSpeech() {
+  if (aiCallInProgress) return;
+
+  // Solo procesar el texto NUEVO que la IA no ha visto
+  const newText = fullTranscript.slice(processedUpTo).trim();
+  if (!newText) return;
+
+  const apiKey = localStorage.getItem('surtido_apikey');
+  if (!apiKey) return;
+
+  aiCallInProgress = true;
+
+  const alreadyFound = liveItems.length
+    ? `Artículos ya identificados (NO repetir): ${liveItems.join(', ')}.`
+    : 'Aún no tengo ningún artículo.';
+
+  const prompt = `Eres un asistente de compras doméstico colombiano muy inteligente.
+El texto viene de reconocimiento de voz y puede tener ERRORES FONÉTICOS. Corrígelos.
+
+CORRECCIONES FONÉTICAS FRECUENTES (aplícalas sin que el usuario lo pida):
+- "chispa de águila" / "chispas de águila" / "chipas de aguila" → "six-pack de Águila"
+- "sixpac" / "six pac" / "six-pack de poker" → "six-pack de Póker"
+- "poquér" / "poker" → "Póker"
+- "club colombia" → "Club Colombia"
+- "postobon" / "postobin" → "Postobón"
+- Infiere el artículo real a partir del contexto de compras del hogar colombiano
+
+INSTRUCCIONES:
+1. Extrae SOLO artículos NUEVOS del texto (no repitas los ya encontrados)
+2. Nombres en minúsculas, sin artículos iniciales (el/la/los/las/un/una)
+3. Si no hay artículos nuevos, devuelve lista vacía
+
+${alreadyFound}
+
+Texto nuevo a analizar: "${newText}"
+
+Responde ÚNICAMENTE con JSON sin explicaciones:
+{"items":["nuevo1","nuevo2"]}`;
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer':  'https://gaviriaelkin-web.github.io/surtido-app/',
+        'X-Title':       'Surtido App'
+      },
+      body: JSON.stringify({
+        model:       'meta-llama/llama-3.3-70b-instruct',
+        messages:    [{ role: 'user', content: prompt }],
+        max_tokens:  150,
+        temperature: 0.1
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) { aiCallInProgress = false; return; }
+
+    const raw = data.choices?.[0]?.message?.content || '{"items":[]}';
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e) { parsed = { items:[] }; }
+
+    const newItems = (parsed.items || [])
+      .map(s => s.trim().toLowerCase().replace(/^(el |la |los |las |un |una )/,''))
+      .filter(s => s.length > 1 && !liveItems.includes(s));
+
+    if (newItems.length) {
+      newItems.forEach(item => {
+        liveItems.push(item);
+        addLiveItemToUI(item);
+      });
+      // Solo UI — NO hablar durante grabación (interrumpiría el micrófono)
+      document.getElementById('doneBtn').disabled = false;
+      document.getElementById('liveEmpty').style.display = 'none';
+    }
+
+    processedUpTo = fullTranscript.length; // avanzar marca de procesado
+  } catch(err) {
+    console.warn('Error procesando IA:', err);
+  } finally {
+    aiCallInProgress = false;
+  }
+}
+
+// Agrega un item a la lista visual en tiempo real
+function addLiveItemToUI(item) {
+  const list = document.getElementById('liveItemsList');
+  document.getElementById('liveEmpty').style.display = 'none';
+  const div = document.createElement('div');
+  div.className = 'live-item';
+  div.id = 'live-' + item.replace(/\s+/g,'_');
+  div.innerHTML = `
+    <span class="item-icon">🛒</span>
+    <span style="flex:1;text-transform:capitalize;">${item}</span>
+    <button class="item-del" onclick="removeLiveItem('${item.replace(/'/g,"\\'")}')">✕</button>`;
+  list.appendChild(div);
+}
+
+function removeLiveItem(item) {
+  liveItems = liveItems.filter(i => i !== item);
+  const el = document.getElementById('live-' + item.replace(/\s+/g,'_'));
+  if (el) el.remove();
+  if (!liveItems.length) {
+    document.getElementById('liveEmpty').style.display = 'block';
+    document.getElementById('doneBtn').disabled = true;
+  }
+}
+
+// ═══════════════════════════════════════
+//  PARAR Y CONFIRMAR
+// ═══════════════════════════════════════
+function stopAndConfirm() {
+  if (!isListening) return;
+
+  isListening = false;
+  suppressRestart = true;
+  clearTimeout(aiDebounceTimer);
+  clearTimeout(silenceTimer);
+  if (recognition) { try { recognition.stop(); } catch(e){} }
+
+  resetMicUI();
+  document.getElementById('liveSection').classList.remove('show');
+  showStatus('statusGrabar', '⏳ Un momento, revisando lo que dijiste…', 'info');
+
+  // Esperar 700ms para capturar resultados final que aún estén en camino
+  setTimeout(() => {
+    // Si no hay transcript final, intentar con el último interim (fallback)
+    if (!fullTranscript.trim() && latestInterim.trim()) {
+      fullTranscript = latestInterim.trim();
+      latestInterim  = '';
+    }
+
+    if (aiCallInProgress) {
+      // Esperar a que termine la llamada en curso
+      const wait = () => aiCallInProgress ? setTimeout(wait, 300) : showConfirmation();
+      wait();
+      return;
+    }
+
+    // Siempre intentar procesar todo el transcript, incluso si processedUpTo ya avanzó
+    // pero liveItems está vacío (el AI pudo haber fallado antes)
+    const toProcess = fullTranscript.trim();
+    if (toProcess) {
+      processedUpTo = 0; // resetear para reprocesar desde el inicio si no hay items
+      if (!liveItems.length) processedUpTo = 0;
+      processNewSpeech().then(() => showConfirmation());
+    } else {
+      showConfirmation();
+    }
+  }, 700);
+}
+
+function showConfirmation() {
+  suppressRestart = false;
+
+  if (!liveItems.length) {
+    const heard = fullTranscript.trim();
+    const heardMsg = heard ? `Escuché: "${heard.slice(0,60)}${heard.length>60?'…':''}" pero no identifiqué artículos. ¿Intenta mencionar los productos más claramente?` : 'No capturé ninguna palabra. Asegúrate de hablar cerca del micrófono y toca para intentar de nuevo.';
+    showStatus('statusGrabar', heardMsg, 'warn');
+    speak(heard ? 'Escuché algo pero no pude identificar artículos. Intenta decir los productos más claramente.' : 'No escuché nada. Acerca el teléfono y toca el micrófono para intentar de nuevo.');
+    return;
+  }
+
+  // Construir panel de confirmación
+  const container = document.getElementById('confirmItemsList');
+  container.innerHTML = '';
+  liveItems.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'live-item';
+    div.style.cssText = 'border-bottom:1px solid var(--green-soft);padding:10px 4px;';
+    div.innerHTML = `
+      <span class="item-icon">🛒</span>
+      <span style="flex:1;font-size:16px;font-weight:700;text-transform:capitalize;">${item}</span>
+      <button class="item-del" onclick="removeConfirmItem(${i})" style="margin-left:auto;background:none;border:none;color:var(--text-soft);cursor:pointer;font-size:18px;padding:2px 6px;">✕</button>`;
+    container.appendChild(div);
+  });
+
+  document.getElementById('confirmPanel').classList.add('show');
+  showStatus('statusGrabar', '', '');
+
+  // TTS de confirmación
+  const n = liveItems.length;
+  let msg;
+  if (n === 1) {
+    msg = `Muy bien, solo apunté una cosa: ${liveItems[0]}. ¿La agrego a tu lista?`;
+  } else if (n <= 4) {
+    const last = liveItems[liveItems.length - 1];
+    const rest = liveItems.slice(0, -1).join(', ');
+    msg = `Perfecto, apunté ${n} artículos: ${rest} y ${last}. ¿Los agrego todos a tu lista?`;
+  } else {
+    msg = `Listo, apunté ${n} artículos en total. ¿Los agrego todos a tu lista de compras?`;
+  }
+
+  speak(msg, () => {
+    listenForConfirmation();
+  });
+}
+
+function removeConfirmItem(i) {
+  liveItems.splice(i, 1);
+  showConfirmation();
+}
+
+function cancelConfirm() {
+  document.getElementById('confirmPanel').classList.remove('show');
+  liveItems = [];
+  if (confirmRecognition) { try { confirmRecognition.stop(); } catch(e){} confirmRecognition = null; }
+  speak('De acuerdo, cancelé todo. Cuando quieras, toca el micrófono para empezar de nuevo.');
+  showStatus('statusGrabar', 'Cancelado. Toca el micrófono para empezar de nuevo.', 'info');
+}
+
+// ═══════════════════════════════════════
+//  CONFIRMACIÓN POR VOZ ("sí" / "no")
+// ═══════════════════════════════════════
+function listenForConfirmation() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR || !liveItems.length) return;
+
+  document.getElementById('voiceHint').classList.add('show');
+
+  confirmRecognition = new SR();
+  confirmRecognition.lang = 'es-CO';
+  confirmRecognition.continuous     = false;
+  confirmRecognition.interimResults = false;
+  confirmRecognition.maxAlternatives= 3;
+
+  confirmRecognition.onresult = (e) => {
+    const said = e.results[0][0].transcript.toLowerCase().trim();
+    const YES  = ['sí','si','dale','listo','agrega','agregar','ok','claro','bueno','de acuerdo','por supuesto','adelante'];
+    const NO   = ['no','cancela','cancelar','nada','borra','borrar'];
+
+    if (YES.some(w => said.includes(w))) {
+      confirmItems();
+    } else if (NO.some(w => said.includes(w))) {
+      cancelConfirm();
+    } else {
+      speak('No entendí bien. Di "sí" para agregar los artículos, o "no" para cancelar.', () => {
+        listenForConfirmation();
+      });
+    }
+  };
+
+  confirmRecognition.onerror = confirmRecognition.onend = () => {
+    document.getElementById('voiceHint').classList.remove('show');
+  };
+
+  try { confirmRecognition.start(); } catch(e) {}
+}
+
+function confirmItems() {
+  if (!liveItems.length) return;
+  document.getElementById('voiceHint').classList.remove('show');
+  document.getElementById('confirmPanel').classList.remove('show');
+  if (confirmRecognition) { try { confirmRecognition.stop(); } catch(e){} confirmRecognition = null; }
+
+  liveItems.forEach(item => addToPedido(item, 'voz'));
+  const n = liveItems.length;
+  liveItems = [];
+  fullTranscript = '';
+
+  showStatus('statusGrabar', `✅ ¡${n} artículo${n > 1 ? 's' : ''} agregado${n > 1 ? 's' : ''} al pedido!`, 'ok');
+
+  const farewell = n === 1
+    ? `¡Listo! Agregué ${n} artículo a tu lista. ¿Algo más?`
+    : `¡Listo! Agregué los ${n} artículos a tu lista de mercado. ¿Necesitas algo más?`;
+
+  speak(farewell, () => {
+    setTimeout(() => switchTab('pedido'), 700);
+  });
+}
+
+// Reset UI del micrófono
+function resetMicUI() {
+  document.getElementById('micBtn').classList.remove('recording', 'processing');
+  document.getElementById('micBtn').textContent = '🎤';
+  document.getElementById('recordLabel').textContent = 'Toca para empezar';
+  document.getElementById('recordSub').textContent   = 'Di los artículos que te hacen falta, uno por uno';
+  document.getElementById('recordArea').classList.remove('listening');
+  document.getElementById('interimBox').textContent = '';
+}
+
+// ═══════════════════════════════════════
+//  PEDIDO
+// ═══════════════════════════════════════
+function updateBadge() {
+  const n = pedido.length;
+  document.getElementById('badge').textContent = n;
+  document.getElementById('badge').classList.toggle('show', n > 0);
+  document.getElementById('listCount').textContent = n + ' artículo' + (n !== 1 ? 's' : '');
+  document.getElementById('bottomBar').classList.toggle('show',
+    n > 0 && document.getElementById('tab-pedido').classList.contains('active'));
+}
+
+function switchTab(name) {
+  ['grabar','manual','pedido','historial'].forEach((t, i) => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.querySelectorAll('.tab')[i].classList.toggle('active', t === name);
+  });
+  if (name === 'pedido')   { renderPedido(); document.getElementById('bottomBar').classList.toggle('show', pedido.length > 0); }
+  else document.getElementById('bottomBar').classList.remove('show');
+  if (name === 'manual')    renderSuggestions();
+  if (name === 'historial') renderHistorial();
+  updateBadge();
+}
+
+function renderSuggestions() {
+  const el = document.getElementById('suggestionsGrid');
+  el.innerHTML = '';
+  SUGGESTIONS.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'sugg-chip'; b.textContent = s;
+    b.onclick = () => {
+      addToPedido(s, 'manual');
+      b.style.background = 'var(--green-soft)';
+      b.style.borderColor = 'var(--green-light)';
+      b.style.color = 'var(--green-dark)';
+    };
+    el.appendChild(b);
+  });
+}
+
+function addToPedido(name, source) {
+  const norm = name.trim().toLowerCase().replace(/^(el |la |los |las |un |una )/,'');
+  if (!norm) return;
+  if (pedido.find(p => p.name.toLowerCase() === norm)) {
+    showStatus('statusGrabar', `"${norm}" ya está en el pedido`, 'warn');
+    return;
+  }
+  const today = new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
+  pedido.push({ id: Date.now() + Math.random(), name: norm, qty: 1, date: today, source });
+  save(); updateBadge();
+  if (document.getElementById('tab-pedido').classList.contains('active')) renderPedido();
+}
+
+function addManual() {
+  const input = document.getElementById('manualInput');
+  const raw   = input.value.trim();
+  if (!raw) return;
+  raw.split(',').forEach(s => addToPedido(s.trim(), 'manual'));
+  input.value = '';
+}
+
+function renderPedido() {
+  const el = document.getElementById('pedidoList');
+  if (!pedido.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧺</div><p>Lista vacía</p><small>Graba una nota o agrega artículos manualmente</small></div>`;
+    updateBadge(); return;
+  }
+  el.innerHTML = '';
+  pedido.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'pedido-item';
+    div.innerHTML = `
+      <span class="item-emoji">${item.source==='voz'?'🎙️':'✏️'}</span>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-meta">${item.date}</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
+      </div>
+      <button class="del-btn" onclick="removeItem('${item.id}')">🗑️</button>`;
+    el.appendChild(div);
+  });
+  updateBadge();
+}
+
+function changeQty(id, d) {
+  const item = pedido.find(p => String(p.id) === String(id));
+  if (item) { item.qty = Math.max(1, item.qty + d); save(); renderPedido(); }
+}
+function removeItem(id) {
+  pedido = pedido.filter(p => String(p.id) !== String(id));
+  save(); renderPedido();
+}
+function clearAll() {
+  if (!pedido.length) return;
+  if (confirm('¿Guardar en historial y limpiar la lista?')) {
+    const today = new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'});
+    historial.unshift({ date: today, items: [...pedido] });
+    if (historial.length > 20) historial = historial.slice(0, 20);
+    saveHist();
+    pedido = []; save(); renderPedido();
+    document.getElementById('bottomBar').classList.remove('show');
+  }
+}
+
+function renderHistorial() {
+  const el = document.getElementById('historialList');
+  if (!historial.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Sin historial aún</p><small>Aquí aparecerán tus pedidos completados</small></div>`;
+    return;
+  }
+  el.innerHTML = '';
+  historial.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'hist-item';
+    div.innerHTML = `<div class="hist-date">📅 ${h.date}</div><div class="hist-items">${h.items.map(i=>`• ${i.name} x${i.qty}`).join('<br>')}</div>`;
+    el.appendChild(div);
+  });
+}
+
+function copyList() {
+  if (!pedido.length) return;
+  const lines = ['🛒 LISTA DE MERCADO', new Date().toLocaleDateString('es-CO'), '', ...pedido.map(p=>`• ${p.name} (x${p.qty})`)];
+  navigator.clipboard.writeText(lines.join('\n')).then(() => alert('✓ Lista copiada al portapapeles'));
+}
+function shareWhatsApp() {
+  if (!pedido.length) return;
+  const lines = ['🛒 *Lista de mercado*', '', ...pedido.map(p=>`• ${p.name} (x${p.qty})`)];
+  window.open('https://wa.me/?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+}
+
+function showStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = msg ? `<div class="status ${type}">${msg}</div>` : '';
+}
+
+// ── Service Worker (limpieza de caché) ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+}
+
+// ── Inicialización ──
+updateBadge();
+checkApiKey();
+</script>
+</body>
+</html>
